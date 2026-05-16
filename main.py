@@ -1,10 +1,7 @@
-import os
-import time
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 from loguru import logger
-import prometheus_fastapi_instrumentator
 
 app = FastAPI(title="Greeting Service", version="1.0")
 
