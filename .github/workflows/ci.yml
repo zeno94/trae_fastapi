@@ -97,4 +97,15 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/greet-service:latest
           
           # 5. 检查服务是否启动成功
-          sleep 3 && curl -f http://localhost:8000 || exit 1
+          echo "Waiting for service to be ready..."
+          for i in {1..15}; do
+            sleep 2
+            if curl -f http://localhost:8000; then
+              echo "Service is ready!"
+              exit 0
+            fi
+            echo "Retry $i/15..."
+          done
+          echo "Service failed to start within timeout"
+          docker logs greet-service --tail 20   # 输出日志帮助调试
+          exit 1
