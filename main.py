@@ -9,9 +9,7 @@ import prometheus_fastapi_instrumentator
 app = FastAPI(title="Greeting Service", version="1.0")
 
 # 结构化日志配置
-logger.add(
-    lambda msg: print(msg, end=""), format="{time} | {level} | {message}", level="INFO"
-)
+logger.add(lambda msg: print(msg, end=""), format="{time} | {level} | {message}", level="INFO")
 
 
 class GreetResponse(BaseModel):
