@@ -9,15 +9,20 @@ import prometheus_fastapi_instrumentator
 app = FastAPI(title="Greeting Service", version="1.0")
 
 # 结构化日志配置
-logger.add(lambda msg: print(msg, end=""), format="{time} | {level} | {message}", level="INFO")
+logger.add(
+    lambda msg: print(msg, end=""), format="{time} | {level} | {message}", level="INFO"
+)
+
 
 class GreetResponse(BaseModel):
     message: str
     timestamp: str
 
+
 @app.get("/")
 def root():
     return {"message": "Welcome to Greeting Service", "docs": "/docs"}
+
 
 @app.get("/greet/{name}", response_model=GreetResponse)
 def greet(name: str):
@@ -29,9 +34,11 @@ def greet(name: str):
     logger.info(f"Greeted {name}")
     return GreetResponse(message=msg, timestamp=datetime.now().isoformat())
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 # Prometheus 监控（可选，如果不安装该库可注释）
 # instrumentator = prometheus_fastapi_instrumentator.Instrumentator()
