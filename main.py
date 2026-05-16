@@ -34,9 +34,11 @@ def greet(name: str):
 def health():
     return {"status": "ok"}
 
+
 @app.get("/hello")
 def hello():
     return {"msg": "Hello from PR!"}
+
 
 # Prometheus 监控（可选，如果不安装该库可注释）
 # instrumentator = prometheus_fastapi_instrumentator.Instrumentator()
