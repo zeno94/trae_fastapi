@@ -2,11 +2,12 @@ name: FastAPI CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]   # 当代码被推送到 main 分支时触发
+    branches: [ main ]
   pull_request:
-    branches: [ main ]   # 当有 PR 指向 main 分支时也会触发
+    branches: [ main ]
 
 jobs:
+  # ====================== 1. 自动化测试 ======================
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -34,6 +35,7 @@ jobs:
       run: |
         pytest
 
+  # ====================== 2. 构建并推送Docker镜像 ======================
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
@@ -59,3 +61,40 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/greet-service:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+  # ====================== 3. 自动部署到你的服务器 ======================
+  deploy:
+    needs: build-and-push  # 只有镜像构建成功，才会部署
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: 部署到云服务器
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        # 服务器信息（需要你在GitHub Secrets里配置）
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        
+        # 服务器上自动执行的命令（核心部署逻辑）
+        script: |
+          # 1. 登录Docker Hub（拉取最新镜像）
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          
+          # 2. 拉取最新版镜像
+          docker pull ${{ secrets.DOCKER_USERNAME }}/greet-service:latest
+          
+          # 3. 停止并删除旧容器（如果存在）
+          docker stop greet-service || true
+          docker rm greet-service || true
+          
+          # 4. 启动新容器（端口 8000，开机自启）
+          docker run -d \
+            --name greet-service \
+            -p 8000:8000 \
+            --restart=always \
+            ${{ secrets.DOCKER_USERNAME }}/greet-service:latest
+          
+          # 5. 检查服务是否启动成功
+          sleep 3 && curl -f http://localhost:8000 || exit 1
